@@ -6,3 +6,7 @@
 @Software: PyCharm
 Introduction:
 """
+
+#%%
+print(1)
+#%%
