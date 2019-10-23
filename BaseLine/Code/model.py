@@ -12,14 +12,13 @@ import numpy as np
 #%%
 class LR:
     # Logistic Regression
-    def __init__(self, w, b):
+    def __init__(self, w):
         """
         init function
         :param w: float w
-        :param b: float b
         """
         self.w = w # w
-        self.b = b # b
+    def
 
     def predict(self, X):
         """
