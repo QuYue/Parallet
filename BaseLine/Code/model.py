@@ -10,6 +10,9 @@ Introduction:
 import numpy as np
 
 #%%
+def add_one(unprocessed_X):
+    return np.concatenate([unprocessed_X, np.ones([unprocessed_X.shape[0], 1])], axis=1)
+#%%
 class LR:
     # Logistic Regression
     def __init__(self, w):
@@ -18,7 +21,7 @@ class LR:
         :param w: float w
         """
         self.w = w # w
-    def
+
 
     def predict(self, X):
         """
@@ -31,7 +34,7 @@ class LR:
         Y = np.zeros(len(X))
         Y_prob = np.zeros(len(X))
         for i, x in enumerate(X):
-            y = 1/(1 + np.exp(-(x.dot(self.w) + self.b)))
+            y = 1/(1 + np.exp(-x.dot(self.w)))
             if y > 0.5:
                 y_prob = 1
             else:
@@ -52,7 +55,7 @@ class LR:
         for i in range(len(X)):
             x = X[i]
             y = Y_real[i]
-            L += -y * (x.dot(self.w) + self.b) + np.log(1 + np.exp(x.dot(self.w) + self.b))
+            L += -y * x.dot(self.w) + np.log(1 + np.exp(x.dot(self.w)))
         return L
 
     def error(self, X, Y_real, Y=None):
@@ -62,8 +65,7 @@ class LR:
         :param Y_real: np.array(n,)  Real class 0 or 1  real label of data
         :param Y np.array(n,)(default=None)  predicted class 0 or 1  result of classification
         :return:
-               w: float w
-               b: float b
+               w: float
                loss_list: list   The list of each epoch
         """
         if Y == None:
@@ -71,7 +73,7 @@ class LR:
         L = np.sum((Y - Y_real)**2)
         return L
 
-    def fit(self, X, Y_real, C = 0.005, silent=False, updateb=True):
+    def fit(self, X, Y_real, C = 0.005, silent=False, mask=None):
         """
         Fit
         :param X: np.array (n*m)  data n=data_number  m=feature_number
@@ -83,24 +85,27 @@ class LR:
                w: float w
                loss_list: list   The list of each epoch
         """
+        if mask == None:
+            mask = np.ones(X.shape[0])
+        else:
+            mask = np.array(mask)
+
         loss_list = []
-        for i in range(500):
+        w_list = []
+        for i in range(20):
             g_w = 0
-            g_b = 0
             for j, x in enumerate(X):
                 y = Y_real[j]
-                p1 = np.exp(x.dot(self.w)+self.b)/(1 + np.exp(x.dot(self.w)+self.b))
+                p1 = np.exp(x.dot(self.w))/(1 + np.exp(x.dot(self.w)))
                 g_w += -(x*(y - p1)).reshape(-1)
-                g_b += -(y - p1)
 
-            self.w = self.w - C * g_w
-            if updateb:
-                self.b = self.b - C * g_b
+            self.w -= C * g_w * mask
+            w_list.append(self.w.copy())
             loss_list.append(self.loss(X, Y_real))
             if silent == False:
                 message = 'Epoch %s | Loss=%s | W=[' %(i, self.loss(X, Y_real))
                 message += '%s,'*len(self.w) %tuple(self.w)
                 message = message[:-1]
-                message+= '] | b=%s' %self.b
+                message+= ']'
             print(message)
-        return self.w, self.b, loss_list
+        return self.w, loss_list, w_list

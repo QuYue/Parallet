@@ -12,6 +12,8 @@ Introduction:
 import numpy as np
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection,Line3DCollection
 import model
 
 #%%
@@ -33,49 +35,66 @@ for i in range(len(X1)):
     X2[i] = X1[i] * (-w[0]/w[1]) + (-b/w[1])
 
 X2 += np.random.normal(loc=0, scale=0.5, size=[100,1])
-X = np.concatenate((X1,X2),axis=1)
-Y = target_fun(X) # 数据集的标签
+X0 = np.concatenate((X1,X2),axis=1)
+Y = target_fun(X0) # 数据集的标签
 
 #%%
-w = np.random.normal(loc=0.0, scale=1.0, size=[2])
-
-b = 50
-lr = model.LR(w,b)
-w, b, loss_list = lr.fit(X,Y, silent=False, updateb=False)
+X = model.add_one(X0)
+w = np.random.normal(loc=0.0, scale=1.0, size=[3])
+w[2] = 50
+lr = model.LR(w)
+w, loss_list, w_list = lr.fit(X,Y, silent=False, mask=[1,1,0])
 print(w)
-print(b)
 t = plt.plot(loss_list)
 plt.show()
+
+
+#%%
+edge = []
+x = []
+y = []
+z = []
+l = len(w_list)
+for i in range(0,l-1):
+    edge.append([[w_list[i][0], w_list[i][1], loss_list[i]+100], [w_list[i+1][0], w_list[i+1][1], loss_list[i+1]+100]])
+    x.append(w_list[i][0])
+    y.append(w_list[i][1])
+    z.append(loss_list[i]+100)
 
 #%%
 fig = plt.figure()
 ax = Axes3D(fig)
 
-W1 = np.arange(-10, 10, 0.5) + 5
-W2 = np.arange(-10, 10, 0.5) - 10
+W1 = np.arange(-10, 10, 1) + 5
+W2 = np.arange(-10, 10, 1) - 10
 L = np.zeros([len(W1),len(W2)])
 for i, w1 in enumerate(W1):
     for j, w2 in enumerate(W2):
-        w = np.array([w1, w2])
-        lr = model.LR(w, 50)
+        w = np.array([w1, w2, 50])
+        lr = model.LR(w)
         L[i,j] = lr.loss(X,Y)
 
-W1, W2  = np.meshgrid(W1, W2)
+W2, W1 = np.meshgrid(W2, W1)
+ax.scatter(x,y,z,alpha=1)
+ax.plot(x,y,z)
+ax.add_collection3d(Line3DCollection(edge, colors='k', linewidths=2, linestyles='-'))
 ax.plot_surface(W1, W2, L, rstride=1, cstride=1, cmap='rainbow')
+# ax.plot_wireframe(W1, W2, L, rstride=1, cstride=1, alpha=0.1)
+# ax.contour(W1, W2, L, cmap=cm.Accent, linewidths=2)
+
+ax.set_xlabel('W1')
+ax.set_ylabel('W2')
+ax.set_zlabel('loss')
+# cset = ax.contour(W1, W2, L, zdir='z', offset=L.min()-1, cmap=cm.coolwarm)
+# cset = ax.contour(W1, W2, L, zdir='x', offset=W1.min()-1,cmap=cm.coolwarm)
+# cset = ax.contour(W1, W2, L, zdir='y', offset=W2.max()+1,cmap=cm.coolwarm)
+
+
+
 
 plt.show()
 
-# #%%
-# fig = plt.figure()
-# W1 = np.arange(-1, 11,0.1)
-# L = []
-# for i in W1:
-#     lr = LR(i, -11)
-#     L.append(lr.loss(X, Y))
-# L = np.array(L)
-# plt.plot(W1,L)
-# plt.show()
-# print('Best w: %s' %W1[L.argmin()])
+#
 
 
 
